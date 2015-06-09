@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html ng-app="MyApp">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Color Recover</title>
+    <link rel="stylesheet" href="css/style.css"/>
+    <style type="text/css">
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+            display: none !important;
+        }
+    </style>
+</head>
+<body ng-controller="MainCtrl">
+
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="page-header">
+                <h1>Color Recover
+                    <small>(un-blender)</small>
+                </h1>
+            </div>
+        </div>
+    </div>
+    <div class="jumbotron">
+        <div class="row">
+            <div class="col-sm-6 col-md-4">
+                <div class="thumbnail" ng-cloak="">
+                    <div class="color" style="background-color: {{ '' + mixedRgba }}"></div>
+                    <div class="caption">
+                        <h4>Mixed Color
+                            <small>({{mixedRgba.toHex()}})</small>
+                        </h4>
+
+                        <div class="input-group">
+                            <span class="input-group-addon">Color</span>
+                            <input type="color" class="form-control" ng-model="mixed.color">
+                            <span class="input-group-addon">HEX</span>
+                        </div>
+                        <br/>
+
+                        <div class="input-group">
+                            <input type="range" min="{{mixed.limit}}" max="100" class="form-control"
+                                   ng-model="mixed.percent">
+                            <span class="input-group-addon">{{mixed.percent<10?'0':''}}{{mixed.percent}}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4" ng-cloak="">
+                <div class="thumbnail">
+                    <div class="color" style="background-color: {{ '' + filterRgba }}"></div>
+                    <div class="caption">
+                        <h4>Filter Color
+                            <small>({{filterRgba.toHex()}})</small>
+                        </h4>
+
+                        <div class="input-group">
+                            <span class="input-group-addon">Color</span>
+                            <input type="color" class="form-control" ng-model="filter.color">
+                            <span class="input-group-addon">HEX</span>
+                        </div>
+                        <br/>
+
+                        <div class="input-group">
+                            <input type="range" min="0" max="{{filter.limit}}" class="form-control"
+                                   ng-model="filter.percent">
+                            <span class="input-group-addon">{{filter.percent<10?'0':''}}{{filter.percent}}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4" ng-cloak="">
+                <div class="thumbnail">
+                    <div class="color" style="background-color: {{ '' + originalColor }}"></div>
+                    <div class="caption">
+                        <h3>Original Color
+                            <small>({{originalColor.toHex()}})</small>
+                        </h3>
+
+                        <p>{{'' + originalColor}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="lib/jquery/dist/jquery.min.js"></script>
+<script src="lib/angular/angular.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
