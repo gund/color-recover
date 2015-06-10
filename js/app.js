@@ -29,7 +29,7 @@
                 $scope.mixedRgba = new Color($scope.mixed.color, $scope.mixed.percent / 100);
                 $scope.filterRgba = new Color($scope.filter.color, $scope.filter.percent / 100);
 
-                $scope.originalColor = $scope.mixedRgba.blendWith($scope.filterRgba);
+                $scope.originalColor = $scope.mixedRgba.unBlendWith($scope.filterRgba);
             };
 
             $scope.$watch('[mixed, filter]', function () {
