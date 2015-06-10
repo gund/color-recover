@@ -64,7 +64,7 @@
              */
             Color.prototype.blendWith = function(color) {
                 if (1 - color.a <= 1.0e-6) return new Color(); // Black - color is fully opaque
-                if (this.a - color.a < -1.0e-6) return Color(); // Black - color can't make the result more transparent
+                if (this.a - color.a < -1.0e-6) return new Color(); // Black - color can't make the result more transparent
                 if (this.a - color.a < 1.0e-6) return this; // Result fully transparent
 
                 var a = Math.min(1 - (1 - this.a) / (1 - color.a), 1);
