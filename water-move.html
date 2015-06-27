@@ -6,6 +6,12 @@
 </head>
 <body ng-controller="MainCtrl">
 
+<button type="button" ng-click="toggleImage()" ng-disabled="!ready">
+    See {{ imgUrl === originalImg ? 'parsed' : 'original' }}
+</button>
+<br><br>
+<img ng-src="{{ imgUrl }}"/>
+
 <script src="lib/jquery/dist/jquery.min.js"></script>
 <script src="lib/angular/angular.min.js"></script>
 <script src="js/color-utils.js"></script>

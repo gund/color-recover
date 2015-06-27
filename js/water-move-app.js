@@ -8,12 +8,19 @@
     angular.module('Gund.WaterMove', ['Gund.ColorUtils', 'Gund.ImageProcessor'])
 
         .controller('MainCtrl', ['$scope', 'ImageProcessor', function ($scope, ImageProcessor) {
-            var imgUrl = 'http://87421a79fde09fda7e57-79445249ccb41a60f7b99c8ef6df8604.r12.cf3.rackcdn.com/4_async_wmarker/2015/6/9/63704369527c1aa30f88cb4c7169baf5cd992f7c/main.jpeg';
+            $scope.originalImg = 'main.jpeg';
+            $scope.imgUrl = $scope.originalImg;
+            $scope.ready = false;
 
-            var image = new ImageProcessor(imgUrl);
+            $scope.toggleImage = function () {
+                $scope.imgUrl = $scope.imgUrl === $scope.originalImg ? image.newImage : $scope.originalImg;
+            };
 
-            image.load().then(function (img) {
-                console.log(img);
+            var image = new ImageProcessor($scope.originalImg);
+
+            image.load().then(function () {
+                $scope.ready = true;
+                $scope.$apply();
             });
         }])
 

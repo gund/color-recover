@@ -7,8 +7,8 @@
 
     angular.module('Gund.ImageProcessor', ['Gund.ColorUtils'])
 
-        .factory('ImageProcessor', ['$q', function ($q) {
-            var internalHash = Math.round(Math.random()*1000);
+        .factory('ImageProcessor', ['$q', 'Color', function ($q, Color) {
+            var internalHash = Math.round(Math.random() * 1000);
 
             /**
              * ImageProcessor Class
@@ -25,12 +25,12 @@
 
                 this.url = imgUrl;
                 this.image = null;
+                this.context = document.createElement('canvas').getContext('2d');
+                this.imagePixels = null;
                 this._imageReady = false;
-                this._context = document.createElement('canvas').getContext('2d');
+                this.newImage = '';
 
-                if (forceLoad) {
-                    this._loadImage(internalHash);
-                }
+                if (forceLoad) internal.call(this, '_loadImage');
 
                 return this;
             }
@@ -40,7 +40,7 @@
              * @returns {Promise}
              */
             ImageProcessor.prototype.load = function () {
-                return this._loadImage(internalHash);
+                return internal.call(this, '_loadImage');
             };
 
             ImageProcessor.prototype._loadImage = function (hash) {
@@ -53,6 +53,7 @@
 
                         this.image.onload = function () {
                             me._imageReady = true;
+                            internal.call(me, '_processImage');
                             dfd.resolve(me.image);
                         };
 
@@ -70,14 +71,51 @@
                 return dfd.promise;
             };
 
-            ImageProcessor.prototype._proccessImage = function (hash) {
+            ImageProcessor.prototype._processImage = function (hash) {
                 if (internalHash !== hash) throw SecurityException();
 
+                // Resize viewport first
+                internal.call(this, '_resizeCanvas');
 
+                // Copy image to viewport
+                this.context.drawImage(this.image, 0, 0);
+
+                this.imagePixels = this.context.getImageData(0, 0, this.image.width, this.image.height).data;
+                this.context.clearRect(0, 0, this.image.width, this.image.height);
+
+                var x = 0, y = 0;
+                for (var i = 0; i < this.imagePixels.length; i += 4) {
+                    // Compute color
+                    this.context.fillStyle = Color.fromRgba(
+                        this.imagePixels[i],
+                        this.imagePixels[i + 1],
+                        this.imagePixels[i + 2],
+                        this.imagePixels[i + 3]
+                    ).toString();
+
+                    // Draw color
+                    this.context.fillRect(x++, y, 1, 1);
+
+                    // Move pixel by pixel
+                    x = x % this.image.width;
+                    if (x === 0) y++;
+                }
+
+                this.newImage = this.context.canvas.toDataURL('image/jpeg');
+            };
+
+            ImageProcessor.prototype._resizeCanvas = function (hash) {
+                if (internalHash !== hash) throw SecurityException();
+                this.context.canvas.width = this.image.width;
+                this.context.canvas.height = this.image.height;
             };
 
             function SecurityException() {
                 return Error('Security Violation: tried to execute internal method');
+            }
+
+            function internal(method) {
+                return this[method](internalHash);
             }
 
             return ImageProcessor; // Export

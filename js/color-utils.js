@@ -38,10 +38,10 @@
              */
             Color.fromRgba = function (r, g, b, a) {
                 var c = new Color();
-                c.a = a;
-                c.r = r;
-                c.g = g;
-                c.b = b;
+                c.a = Math.max(Math.min(a, 1), 0);
+                c.r = Math.ceil(Math.max(Math.min(r, 255), 0));
+                c.g = Math.ceil(Math.max(Math.min(g, 255), 0));
+                c.b = Math.ceil(Math.max(Math.min(b, 255), 0));
                 return c;
             };
 
