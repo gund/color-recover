@@ -13,14 +13,13 @@
             $scope.ready = false;
 
             $scope.toggleImage = function () {
-                $scope.imgUrl = $scope.imgUrl === $scope.originalImg ? image.newImage : $scope.originalImg;
+                $scope.imgUrl = $scope.imgUrl === $scope.originalImg ? image.getNewImage() : $scope.originalImg;
             };
 
             var image = new ImageProcessor($scope.originalImg);
 
             image.load().then(function () {
                 $scope.ready = true;
-                $scope.$apply();
             });
         }])
 
