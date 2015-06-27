@@ -8,6 +8,7 @@
     angular.module('Gund.ImageProcessor', ['Gund.ColorUtils'])
 
         .factory('ImageProcessor', ['$q', function ($q) {
+            var internalHash = Math.round(Math.random()*1000);
 
             /**
              * ImageProcessor Class
@@ -24,10 +25,11 @@
 
                 this.url = imgUrl;
                 this.image = null;
-                this.imageReady = false;
+                this._imageReady = false;
+                this._context = document.createElement('canvas').getContext('2d');
 
                 if (forceLoad) {
-                    this._loadImage();
+                    this._loadImage(internalHash);
                 }
 
                 return this;
@@ -38,18 +40,19 @@
              * @returns {Promise}
              */
             ImageProcessor.prototype.load = function () {
-                return this._loadImage();
+                return this._loadImage(internalHash);
             };
 
-            ImageProcessor.prototype._loadImage = function () {
+            ImageProcessor.prototype._loadImage = function (hash) {
+                if (internalHash !== hash) throw SecurityException();
                 var dfd = $q.defer(), me = this;
 
-                if (!this.imageReady) {
+                if (!this._imageReady) {
                     try {
                         this.image = new Image();
 
                         this.image.onload = function () {
-                            me.imageReady = true;
+                            me._imageReady = true;
                             dfd.resolve(me.image);
                         };
 
@@ -66,6 +69,16 @@
 
                 return dfd.promise;
             };
+
+            ImageProcessor.prototype._proccessImage = function (hash) {
+                if (internalHash !== hash) throw SecurityException();
+
+
+            };
+
+            function SecurityException() {
+                return Error('Security Violation: tried to execute internal method');
+            }
 
             return ImageProcessor; // Export
         }])
