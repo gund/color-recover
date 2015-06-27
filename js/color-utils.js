@@ -5,7 +5,7 @@
 (function () {
     "use strict";
 
-    angular.module('Gund.ImageUtils', [])
+    angular.module('Gund.ColorUtils', [])
 
         .factory('Color', [function () {
             /**

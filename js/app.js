@@ -5,7 +5,7 @@
 (function () {
     "use strict";
 
-    angular.module('MyApp', ['Gund.ImageUtils', 'Gund.ImageProcessor'])
+    angular.module('MyApp', ['Gund.ColorUtils', 'Gund.ImageProcessor'])
 
         .controller('MainCtrl', ['$scope', 'Color', function ($scope, Color) {
             $scope.mixed = {
