@@ -10,7 +10,7 @@
         .controller('MainCtrl', ['$scope', 'ImageProcessor', 'WaterMove', '$q',
             function ($scope, ImageProcessor, WaterMove, $q) {
                 $scope.originalImg = 'main.jpeg';
-                $scope.waterImg = 'watermark.png';
+                $scope.waterImg = 'watermark_v6.png';
                 $scope.imgUrl = $scope.originalImg;
                 $scope.ready = false;
 
@@ -24,7 +24,7 @@
                 $q.all([image.load(), water.load()]).then(function () {
                     $scope.ready = true;
 
-                    new WaterMove(image, water);
+                    new WaterMove(image, water, 1);
                 });
             }])
 
@@ -33,13 +33,19 @@
              * WaterMove class
              * @param {ImageProcessor} image
              * @param {ImageProcessor} water
+             * @param {Number} cycleCount
              * @constructor
              */
-            function WaterMove(image, water) {
+            function WaterMove(image, water, cycleCount) {
+                cycleCount = Math.min(parseInt(cycleCount), 10) || 1;
                 this.image = image;
                 this.water = water;
 
-                this.moveWater();
+                for (var i = 0; i < cycleCount; ++i) {
+                    this.moveWater();
+                }
+
+                this.image.exportImage(true);
 
                 return this;
             }
@@ -52,7 +58,7 @@
 
                 // Coordinates of water
                 var top = Math.ceil(imageH / 2 - waterH / 2) - 1,
-                    left = Math.ceil(imageW / 2 - waterW / 2) - 1;
+                    left = Math.ceil(imageW / 2 - waterW / 2) - 2;
 
                 // Pixels range for redrawing
                 var pixelOffset = (top * imageW + left) * 4,
@@ -60,10 +66,12 @@
                     waterImageOffset = ((imageW - (left + waterW)) + left) * 4;
 
                 // Redraw pixels
-                var x = 0, y = 0;
-                for (var i = 0; i <= this.water.imagePixels.length; i += 4) {
+                var x = 0, y = 0, isTransparent = true;
+                for (var i = 0; i < this.water.imagePixels.length; i += 4) {
                     // Skip transparent water pixels
                     if (this.water.imagePixels[i + 3] !== 0) {
+                        if (this.water.imagePixels[i + 7] === 0) isTransparent = true;
+
                         // Get mixed (source) pixel
                         var colorMixed = Color.fromRgba(
                             this.image.imagePixels[pixelOffset + i],
@@ -77,32 +85,33 @@
                             this.water.imagePixels[i],
                             this.water.imagePixels[i + 1],
                             this.water.imagePixels[i + 2],
-                            0.18
+                            isTransparent ? 0.05 : 0.17
                         );
 
                         // Move those pixels
                         var colorOriginal = colorMixed.unBlendWith(colorFilter);
 
                         // Update pixel data
-                        this.image.imagePixels[pixelOffset + i] = colorOriginal.r;
-                        this.image.imagePixels[pixelOffset + i + 1] = colorOriginal.g;
-                        this.image.imagePixels[pixelOffset + i + 2] = colorOriginal.b;
-                        this.image.imagePixels[pixelOffset + i + 3] = colorOriginal.a;
-                    }
+                        //if (isTransparent) {
+                        //    this.image.imagePixels[pixelOffset + i] = 255;
+                        //    this.image.imagePixels[pixelOffset + i + 1] = 0;
+                        //    this.image.imagePixels[pixelOffset + i + 2] = 0;
+                        //    this.image.imagePixels[pixelOffset + i + 3] = 1;
+                        //} else {
+                            this.image.imagePixels[pixelOffset + i] = colorOriginal.r;
+                            this.image.imagePixels[pixelOffset + i + 1] = colorOriginal.g;
+                            this.image.imagePixels[pixelOffset + i + 2] = colorOriginal.b;
+                            this.image.imagePixels[pixelOffset + i + 3] = colorOriginal.a;
+                        //}
+
+                        isTransparent = false;
+                    } else isTransparent = true;
 
                     // Move pixel by pixel
                     x++;
                     x = x % (waterW / 2);
                     if (x === 0) pixelOffset += waterImageOffset;
                 }
-
-                //this.image.context.drawImage(
-                //    this.water.image,
-                //    imageW / 2 - waterW / 2,
-                //    imageH / 2 - waterH / 2
-                //);
-
-                this.image.exportImage(true);
             };
 
             return WaterMove; // Export
