@@ -87,7 +87,7 @@
                         this.image.imagePixels[pixelOffset + i] = colorOriginal.r;
                         this.image.imagePixels[pixelOffset + i + 1] = colorOriginal.g;
                         this.image.imagePixels[pixelOffset + i + 2] = colorOriginal.b;
-                        this.image.imagePixels[pixelOffset + i + 3] = Math.max(colorOriginal.a, 200);
+                        this.image.imagePixels[pixelOffset + i + 3] = colorOriginal.a;
                     }
 
                     // Move pixel by pixel
