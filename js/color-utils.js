@@ -45,6 +45,15 @@
                 return c;
             };
 
+            Color.fromColor = function (color) {
+                var c = new Color();
+                c.a = color.a;
+                c.r = color.r;
+                c.g = color.g;
+                c.b = color.b;
+                return c;
+            };
+
             /**
              * Get HEX representation of Color Object
              * @returns {string}
