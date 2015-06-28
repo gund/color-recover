@@ -51,44 +51,49 @@
                     waterH = this.water.image.height;
 
                 // Coordinates of water
-                var top = imageH / 2 - waterH / 2,
-                    left = imageW / 2 - waterW / 2;
+                var top = Math.ceil(imageH / 2 - waterH / 2) - 1,
+                    left = Math.ceil(imageW / 2 - waterW / 2) - 1;
 
                 // Pixels range for redrawing
-                var pixelOffset = top * imageW * 4 + left * 4;
-                var pixelEnd = pixelOffset + waterW * waterH;
+                var pixelOffset = (top * imageW + left) * 4,
+                    pixelEnd = pixelOffset + waterW * waterH * 4,
+                    waterImageOffset = ((imageW - (left + waterW)) + left) * 4;
 
                 // Redraw pixels
-                var x = left, y = top;
-                for (var i = pixelOffset; i <= pixelEnd; i += 4) {
-                    // Get mixed (source) pixel
-                    var colorMixed = Color.fromRgba(
-                        this.image.imagePixels[i],
-                        this.image.imagePixels[i + 1],
-                        this.image.imagePixels[i + 2],
-                        this.image.imagePixels[i + 3]
-                    );
+                var x = 0, y = 0;
+                for (var i = 0; i <= this.water.imagePixels.length; i += 4) {
+                    // Skip transparent water pixels
+                    if (this.water.imagePixels[i + 3] !== 0) {
+                        // Get mixed (source) pixel
+                        var colorMixed = Color.fromRgba(
+                            this.image.imagePixels[pixelOffset + i],
+                            this.image.imagePixels[pixelOffset + i + 1],
+                            this.image.imagePixels[pixelOffset + i + 2],
+                            1
+                        );
 
-                    // Get water pixel
-                    var colorFilter = Color.fromRgba(
-                        this.water.imagePixels[i],
-                        this.water.imagePixels[i + 1],
-                        this.water.imagePixels[i + 2],
-                        this.water.imagePixels[i + 3]
-                    );
+                        // Get water pixel
+                        var colorFilter = Color.fromRgba(
+                            this.water.imagePixels[i],
+                            this.water.imagePixels[i + 1],
+                            this.water.imagePixels[i + 2],
+                            0.18
+                        );
 
-                    // Move those pixels
-                    var colorOriginal = colorMixed.unBlendWith(colorFilter);
+                        // Move those pixels
+                        var colorOriginal = colorMixed.unBlendWith(colorFilter);
 
-                    // Update pixel data
-                    this.image.imagePixels[i] = colorOriginal.r;
-                    this.image.imagePixels[i + 1] = colorOriginal.g;
-                    this.image.imagePixels[i + 2] = colorOriginal.b;
-                    this.image.imagePixels[i + 3] = colorOriginal.a;
+                        // Update pixel data
+                        this.image.imagePixels[pixelOffset + i] = colorOriginal.r;
+                        this.image.imagePixels[pixelOffset + i + 1] = colorOriginal.g;
+                        this.image.imagePixels[pixelOffset + i + 2] = colorOriginal.b;
+                        this.image.imagePixels[pixelOffset + i + 3] = Math.max(colorOriginal.a, 200);
+                    }
 
                     // Move pixel by pixel
-                    x = x % this.image.image.width;
-                    if (x === 0) y++;
+                    x++;
+                    x = x % (waterW / 2);
+                    if (x === 0) pixelOffset += waterImageOffset;
                 }
 
                 //this.image.context.drawImage(
