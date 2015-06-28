@@ -9,7 +9,7 @@
 
         .controller('MainCtrl', ['$scope', 'ImageProcessor', 'WaterMove', '$q',
             function ($scope, ImageProcessor, WaterMove, $q) {
-                $scope.originalImg = 'main.jpeg';
+                $scope.originalImg = 'test3.jpeg';
                 $scope.waterImg = 'watermark_v6.png';
                 $scope.imgUrl = $scope.originalImg;
                 $scope.ready = false;
@@ -25,6 +25,8 @@
                     $scope.ready = true;
 
                     new WaterMove(image, water, 1);
+
+                    $scope.toggleImage();
                 });
             }])
 
@@ -91,89 +93,110 @@
                             isTransparent ? 0.05 : 0.17
                         );
 
-                        // Move those pixels
-                        var colorOriginal = colorMixed.unBlendWith(colorFilter);
+                        var minColor = 255 * colorFilter.a;
+                        var maxColor = 255 - minColor;
 
-                        // Update pixel data
-                        if (isTransparent) {
-                            //var divider = parseInt(isLeft) + parseInt(isRight) + 1;
+                        // If pixel is out of sensitive range make it lighter/darker
+                        if ((colorMixed.r <= minColor && colorMixed.g <= minColor && colorMixed.b <= minColor) ||
+                            (colorMixed.r >= maxColor && colorMixed.g >= maxColor && colorMixed.b >= maxColor)) {
+                            //var k = colorMixed.r <= minColor,
+                            //    kr = k ? (minColor / colorMixed.r) / 2 : (colorMixed.r / maxColor),
+                            //    kg = k ? (minColor / colorMixed.g) / 2 : (colorMixed.g / maxColor),
+                            //    kb = k ? (minColor / colorMixed.b) / 2 : (colorMixed.b / maxColor);
 
-                            var color = Color.fromColor(colorOriginal);
-                            color.a = 1;
-
-                            // Produce fast inpaint algorithm
-                            if (isLeft) {
-                                var leftColor = Color.fromRgba(
-                                    this.image.imagePixels[pixelOffset + i - 4],
-                                    this.image.imagePixels[pixelOffset + i - 3],
-                                    this.image.imagePixels[pixelOffset + i - 2],
-                                    1
-                                );
-                                //var leftTopColor = Color.fromRgba(
-                                //    this.image.imagePixels[pixelOffset + i - 4 - waterImageOffset],
-                                //    this.image.imagePixels[pixelOffset + i - 3 - waterImageOffset],
-                                //    this.image.imagePixels[pixelOffset + i - 2 - waterImageOffset],
-                                //    1
-                                //);
-                                //var leftTopTopColor = Color.fromRgba(
-                                //    this.image.imagePixels[pixelOffset + i - 8 - waterImageOffset],
-                                //    this.image.imagePixels[pixelOffset + i - 7 - waterImageOffset],
-                                //    this.image.imagePixels[pixelOffset + i - 6 - waterImageOffset],
-                                //    1
-                                //);
-
-                                color = color.blendWith(leftColor);
-
-                                this.image.imagePixels[pixelOffset + i - 4] = color.r;
-                                this.image.imagePixels[pixelOffset + i - 3] = color.g;
-                                this.image.imagePixels[pixelOffset + i - 2] = color.b;
-                            }
-                            if (isRight) {
-                                var rightColor = Color.fromRgba(
-                                    this.image.imagePixels[pixelOffset + i + 4],
-                                    this.image.imagePixels[pixelOffset + i + 5],
-                                    this.image.imagePixels[pixelOffset + i + 6],
-                                    1
-                                );
-                                //var rightTopColor = Color.fromRgba(
-                                //    this.image.imagePixels[pixelOffset + i + 4 - waterImageOffset],
-                                //    this.image.imagePixels[pixelOffset + i + 5 - waterImageOffset],
-                                //    this.image.imagePixels[pixelOffset + i + 6 - waterImageOffset],
-                                //    1
-                                //);
-                                //var rightTopTopColor = Color.fromRgba(
-                                //    this.image.imagePixels[pixelOffset + i + 8 - waterImageOffset],
-                                //    this.image.imagePixels[pixelOffset + i + 9 - waterImageOffset],
-                                //    this.image.imagePixels[pixelOffset + i + 10 - waterImageOffset],
-                                //    1
-                                //);
-
-                                color = color.blendWith(rightColor);
-
-                                this.image.imagePixels[pixelOffset + i + 4] = color.r;
-                                this.image.imagePixels[pixelOffset + i + 5] = color.g;
-                                this.image.imagePixels[pixelOffset + i + 6] = color.b;
-                            }
-
-                            // Apply blended color
-                            this.image.imagePixels[pixelOffset + i] = color.r;
-                            this.image.imagePixels[pixelOffset + i + 1] = color.g;
-                            this.image.imagePixels[pixelOffset + i + 2] = color.b;
-                            this.image.imagePixels[pixelOffset + i + 3] = 1;
+                            this.image.imagePixels[pixelOffset + i] =
+                                Math.min(this.image.imagePixels[pixelOffset + i] * 1.05, 255);
+                            this.image.imagePixels[pixelOffset + i + 1] =
+                                Math.min(this.image.imagePixels[pixelOffset + i + 1] * 1.05, 255);
+                            this.image.imagePixels[pixelOffset + i + 2] =
+                                Math.min(this.image.imagePixels[pixelOffset + i + 2] * 1.05, 255);
+                            //this.image.imagePixels[pixelOffset + i + 3] = 1;
                         } else {
-                            // Detect red regions
-                            if (this.water.imagePixels[i] > 250 &&
-                                this.water.imagePixels[i + 1] < 30 &&
-                                this.water.imagePixels[i + 2] < 30) {
-                                colorOriginal.r = Math.round(Math.min(colorOriginal.r * 1.15, 255));
-                                //colorOriginal.g = Math.round(Math.min(colorOriginal.g * 0.8, 255));
-                                colorOriginal.b = Math.round(Math.min(colorOriginal.b * 1.005, 255));
-                            }
 
-                            this.image.imagePixels[pixelOffset + i] = colorOriginal.r;
-                            this.image.imagePixels[pixelOffset + i + 1] = colorOriginal.g;
-                            this.image.imagePixels[pixelOffset + i + 2] = colorOriginal.b;
-                            this.image.imagePixels[pixelOffset + i + 3] = colorOriginal.a;
+                            // Move those pixels
+                            var colorOriginal = colorMixed.unBlendWith(colorFilter);
+
+                            // Update pixel data
+                            if (isTransparent) {
+                                //var divider = parseInt(isLeft) + parseInt(isRight) + 1;
+
+                                var color = Color.fromColor(colorOriginal);
+                                color.a = 1;
+
+                                // Produce fast inpaint algorithm
+                                if (isLeft) {
+                                    var leftColor = Color.fromRgba(
+                                        this.image.imagePixels[pixelOffset + i - 4],
+                                        this.image.imagePixels[pixelOffset + i - 3],
+                                        this.image.imagePixels[pixelOffset + i - 2],
+                                        1
+                                    );
+                                    //var leftTopColor = Color.fromRgba(
+                                    //    this.image.imagePixels[pixelOffset + i - 4 - waterImageOffset],
+                                    //    this.image.imagePixels[pixelOffset + i - 3 - waterImageOffset],
+                                    //    this.image.imagePixels[pixelOffset + i - 2 - waterImageOffset],
+                                    //    1
+                                    //);
+                                    //var leftTopTopColor = Color.fromRgba(
+                                    //    this.image.imagePixels[pixelOffset + i - 8 - waterImageOffset],
+                                    //    this.image.imagePixels[pixelOffset + i - 7 - waterImageOffset],
+                                    //    this.image.imagePixels[pixelOffset + i - 6 - waterImageOffset],
+                                    //    1
+                                    //);
+
+                                    color = color.blendWith(leftColor);
+
+                                    this.image.imagePixels[pixelOffset + i - 4] = color.r;
+                                    this.image.imagePixels[pixelOffset + i - 3] = color.g;
+                                    this.image.imagePixels[pixelOffset + i - 2] = color.b;
+                                }
+                                if (isRight) {
+                                    var rightColor = Color.fromRgba(
+                                        this.image.imagePixels[pixelOffset + i + 4],
+                                        this.image.imagePixels[pixelOffset + i + 5],
+                                        this.image.imagePixels[pixelOffset + i + 6],
+                                        1
+                                    );
+                                    //var rightTopColor = Color.fromRgba(
+                                    //    this.image.imagePixels[pixelOffset + i + 4 - waterImageOffset],
+                                    //    this.image.imagePixels[pixelOffset + i + 5 - waterImageOffset],
+                                    //    this.image.imagePixels[pixelOffset + i + 6 - waterImageOffset],
+                                    //    1
+                                    //);
+                                    //var rightTopTopColor = Color.fromRgba(
+                                    //    this.image.imagePixels[pixelOffset + i + 8 - waterImageOffset],
+                                    //    this.image.imagePixels[pixelOffset + i + 9 - waterImageOffset],
+                                    //    this.image.imagePixels[pixelOffset + i + 10 - waterImageOffset],
+                                    //    1
+                                    //);
+
+                                    color = color.blendWith(rightColor);
+
+                                    this.image.imagePixels[pixelOffset + i + 4] = color.r;
+                                    this.image.imagePixels[pixelOffset + i + 5] = color.g;
+                                    this.image.imagePixels[pixelOffset + i + 6] = color.b;
+                                }
+
+                                // Apply blended color
+                                this.image.imagePixels[pixelOffset + i] = color.r;
+                                this.image.imagePixels[pixelOffset + i + 1] = color.g;
+                                this.image.imagePixels[pixelOffset + i + 2] = color.b;
+                                this.image.imagePixels[pixelOffset + i + 3] = 1;
+                            } else {
+                                // Detect red regions
+                                if (this.water.imagePixels[i] > 250 &&
+                                    this.water.imagePixels[i + 1] < 30 &&
+                                    this.water.imagePixels[i + 2] < 30) {
+                                    colorOriginal.r = Math.round(Math.min(colorOriginal.r * 1.15, 255));
+                                    //colorOriginal.g = Math.round(Math.min(colorOriginal.g * 0.8, 255));
+                                    colorOriginal.b = Math.round(Math.min(colorOriginal.b * 1.005, 255));
+                                }
+
+                                this.image.imagePixels[pixelOffset + i] = colorOriginal.r;
+                                this.image.imagePixels[pixelOffset + i + 1] = colorOriginal.g;
+                                this.image.imagePixels[pixelOffset + i + 2] = colorOriginal.b;
+                                this.image.imagePixels[pixelOffset + i + 3] = colorOriginal.a;
+                            }
                         }
 
                         isTransparent = false;
